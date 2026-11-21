@@ -14,6 +14,7 @@ import com.example.teammate.ui.components.PlaceholderScreen
 import com.example.teammate.ui.dashboard.DashboardScreen
 import com.example.teammate.ui.projects.ProjectDetailsScreen
 import com.example.teammate.ui.profile.ProfileScreen
+import com.example.teammate.ui.projects.ProjectsScreen
 import com.example.teammate.ui.theme.PrimaryGreen
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -62,7 +63,7 @@ fun AppNavigation() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Dashboard.route) { DashboardScreen()}
-            composable(Screen.Projects.route) { ProjectDetailsScreen () }
+            composable(Screen.Projects.route) { ProjectsScreen() }
             composable(Screen.Calendar.route) { PlaceholderScreen("Calendar") }
             composable(Screen.Team.route) { TeamScreen() }
             composable(Screen.Profile.route) { ProfileScreen () }
