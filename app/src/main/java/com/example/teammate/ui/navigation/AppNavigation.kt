@@ -64,7 +64,7 @@ fun AppNavigation() {
         ) {
             composable(Screen.Dashboard.route) { DashboardScreen()}
             composable(Screen.Projects.route) { ProjectsScreen() }
-            composable(Screen.Calendar.route) { PlaceholderScreen("Calendar") }
+            composable(Screen.Calendar.route) { CalenderScreen() }
             composable(Screen.Team.route) { TeamScreen() }
             composable(Screen.Profile.route) { ProfileScreen () }
         }
