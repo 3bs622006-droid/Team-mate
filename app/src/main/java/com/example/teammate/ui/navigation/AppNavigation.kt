@@ -1,5 +1,5 @@
 package com.example.teammate.ui.navigation
-
+import com.example.teammate.ui.team.TeamScreen
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -62,7 +62,7 @@ fun AppNavigation() {
             composable(Screen.Dashboard.route) { DashboardScreen()}
             composable(Screen.Projects.route) { PlaceholderScreen("Projects") }
             composable(Screen.Calendar.route) { PlaceholderScreen("Calendar") }
-            composable(Screen.Team.route) { PlaceholderScreen("Team") }
+            composable(Screen.Team.route) { TeamScreen() }
             composable(Screen.Profile.route) { PlaceholderScreen("Profile") }
         }
     }
