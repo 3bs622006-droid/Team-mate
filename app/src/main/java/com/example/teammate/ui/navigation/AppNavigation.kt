@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.*
 import com.example.teammate.ui.components.PlaceholderScreen
+import com.example.teammate.ui.profile.ProfileScreen
 import com.example.teammate.ui.theme.PrimaryGreen
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -62,7 +63,7 @@ fun AppNavigation() {
             composable(Screen.Projects.route) { PlaceholderScreen("Projects") }
             composable(Screen.Calendar.route) { PlaceholderScreen("Calendar") }
             composable(Screen.Team.route) { TeamScreen() }
-            composable(Screen.Profile.route) { PlaceholderScreen("Profile") }
+            composable(Screen.Profile.route) { ProfileScreen () }
         }
     }
 }
