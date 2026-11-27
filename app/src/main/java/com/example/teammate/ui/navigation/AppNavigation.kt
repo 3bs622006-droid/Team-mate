@@ -1,5 +1,8 @@
 package com.example.teammate.ui.navigation
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -29,6 +32,18 @@ sealed class Screen(val route: String, val title: String = "", val icon: ImageVe
     object Profile : Screen("profile", "Profile", Icons.Default.Person)
 }
 
+// Cinematic 850ms duration for Hero Shared Element animations
+const val HeroTransitionDuration = 850
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+val HeroBoundsTransform = BoundsTransform { _, _ ->
+    tween(
+        durationMillis = HeroTransitionDuration,
+        easing = FastOutSlowInEasing
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -75,35 +90,97 @@ fun AppNavigation() {
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Onboarding.route,
-            modifier = Modifier.padding(if (shouldShowBottomBar) innerPadding else androidx.compose.foundation.layout.PaddingValues())
-        ) {
-            composable(Screen.Onboarding.route) {
-                OnboardingScreen(
-                    onGetStarted = {
-                        navController.navigate(Screen.Login.route)
-                    }
-                )
+        SharedTransitionLayout {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Onboarding.route,
+                modifier = Modifier.padding(if (shouldShowBottomBar) innerPadding else androidx.compose.foundation.layout.PaddingValues()),
+                enterTransition = {
+                    fadeIn(
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    ) + slideInHorizontally(
+                        initialOffsetX = { 200 },
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                },
+                exitTransition = {
+                    fadeOut(
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    ) + slideOutHorizontally(
+                        targetOffsetX = { -200 },
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                },
+                popEnterTransition = {
+                    fadeIn(
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    ) + slideInHorizontally(
+                        initialOffsetX = { -200 },
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                },
+                popExitTransition = {
+                    fadeOut(
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    ) + slideOutHorizontally(
+                        targetOffsetX = { 200 },
+                        animationSpec = tween(
+                            durationMillis = HeroTransitionDuration,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                }
+            ) {
+                composable(Screen.Onboarding.route) {
+                    OnboardingScreen(
+                        onGetStarted = {
+                            navController.navigate(Screen.Login.route)
+                        },
+                        animatedVisibilityScope = this@composable,
+                        sharedTransitionScope = this@SharedTransitionLayout
+                    )
+                }
+                composable(Screen.Login.route) {
+                    LoginScreen(
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onLoginSuccess = {
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            }
+                        },
+                        animatedVisibilityScope = this@composable,
+                        sharedTransitionScope = this@SharedTransitionLayout
+                    )
+                }
+                composable(Screen.Dashboard.route) { DashboardScreen() }
+                composable(Screen.Projects.route) { ProjectsScreen() }
+                composable(Screen.Calendar.route) { CalendarScreen() }
+                composable(Screen.Team.route) { TeamScreen() }
+                composable(Screen.Profile.route) { ProfileScreen() }
             }
-            composable(Screen.Login.route) {
-                LoginScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onLoginSuccess = {
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.Onboarding.route) { inclusive = true }
-                        }
-                    }
-                )
-            }
-            composable(Screen.Dashboard.route) { DashboardScreen() }
-            composable(Screen.Projects.route) { ProjectsScreen() }
-            composable(Screen.Calendar.route) { CalendarScreen() }
-            composable(Screen.Team.route) { TeamScreen() }
-            composable(Screen.Profile.route) { ProfileScreen() }
         }
     }
 }

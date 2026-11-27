@@ -1,5 +1,8 @@
 package com.example.teammate.ui.onboarding
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,11 +34,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.teammate.ui.navigation.HeroBoundsTransform
 import com.example.teammate.ui.theme.PrimaryGreen
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun OnboardingScreen(
-    onGetStarted: () -> Unit
+    onGetStarted: () -> Unit,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
+    sharedTransitionScope: SharedTransitionScope? = null
 ) {
     // --- State for Entrance Animations ---
     var isVisible by remember { mutableStateOf(false) }
@@ -228,7 +235,19 @@ fun OnboardingScreen(
                     }
             ) {
                 Surface(
-                    modifier = Modifier.size(46.dp),
+                    modifier = Modifier
+                        .size(46.dp)
+                        .then(
+                            if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                                with(sharedTransitionScope) {
+                                    Modifier.sharedBounds(
+                                        sharedContentState = rememberSharedContentState(key = "app_logo_container"),
+                                        animatedVisibilityScope = animatedVisibilityScope,
+                                        boundsTransform = HeroBoundsTransform
+                                    )
+                                }
+                            } else Modifier
+                        ),
                     shape = RoundedCornerShape(14.dp),
                     color = Color.White,
                     shadowElevation = 2.dp
@@ -238,7 +257,19 @@ fun OnboardingScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         TeamMateLogoIcon(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .then(
+                                    if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                                        with(sharedTransitionScope) {
+                                            Modifier.sharedElement(
+                                                state = rememberSharedContentState(key = "app_logo_icon"),
+                                                animatedVisibilityScope = animatedVisibilityScope,
+                                                boundsTransform = HeroBoundsTransform
+                                            )
+                                        }
+                                    } else Modifier
+                                ),
                             tint = PrimaryGreen
                         )
                     }
@@ -251,7 +282,18 @@ fun OnboardingScreen(
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.5).sp
+                    letterSpacing = (-0.5).sp,
+                    modifier = Modifier.then(
+                        if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedBounds(
+                                    sharedContentState = rememberSharedContentState(key = "header_title"),
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                    boundsTransform = HeroBoundsTransform
+                                )
+                            }
+                        } else Modifier
+                    )
                 )
             }
 
@@ -350,6 +392,17 @@ fun OnboardingScreen(
                         scaleX = buttonScale * pressScale
                         scaleY = buttonScale * pressScale
                     }
+                    .then(
+                        if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedBounds(
+                                    sharedContentState = rememberSharedContentState(key = "primary_action_button"),
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                    boundsTransform = HeroBoundsTransform
+                                )
+                            }
+                        } else Modifier
+                    )
                     .shadow(elevation = 6.dp, shape = CircleShape),
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
@@ -527,6 +580,7 @@ fun TeamMateLogoIcon(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(showBackground = true)
 @Composable
 fun OnboardingScreenPreview() {
