@@ -3,7 +3,6 @@ package com.example.teammate.ui.auth
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MailOutline
-import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
@@ -40,7 +38,6 @@ import com.example.teammate.ui.onboarding.TeamMateLogoIcon
 import com.example.teammate.ui.theme.BackgroundGray
 import com.example.teammate.ui.theme.BorderLight
 import com.example.teammate.ui.theme.CardWhite
-import com.example.teammate.ui.theme.DividerGray
 import com.example.teammate.ui.theme.PrimaryGreen
 import com.example.teammate.ui.theme.TeamMateTheme
 import com.example.teammate.ui.theme.TextHint
@@ -57,7 +54,6 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
     onForgotPassword: () -> Unit = {},
     onCreateAccount: () -> Unit = {},
-    onUniversityPortalClick: () -> Unit = {},
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
     sharedTransitionScope: SharedTransitionScope? = null
 ) {
@@ -212,7 +208,7 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Sign In Primary Button (Hero Shared Element)
             Button(
@@ -246,67 +242,6 @@ fun LoginScreen(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold
                 )
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // "or" Divider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    thickness = 1.dp,
-                    color = DividerGray
-                )
-                Text(
-                    text = "or",
-                    color = TextHint,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 14.dp)
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    thickness = 1.dp,
-                    color = DividerGray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            // Sign in with University Portal
-            OutlinedButton(
-                onClick = onUniversityPortalClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = PillShape,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = CardWhite,
-                    contentColor = TextPrimary
-                ),
-                border = BorderStroke(1.dp, BorderLight),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.School,
-                        contentDescription = "University Portal",
-                        tint = PrimaryGreen,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Sign in with University Portal",
-                        color = TextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

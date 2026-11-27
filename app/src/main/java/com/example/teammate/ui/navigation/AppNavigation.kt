@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.*
 import com.example.teammate.ui.auth.LoginScreen
+import com.example.teammate.ui.auth.RegisterScreen
 import com.example.teammate.ui.calendar.CalendarScreen
 import com.example.teammate.ui.dashboard.DashboardScreen
 import com.example.teammate.ui.onboarding.OnboardingScreen
@@ -25,6 +26,7 @@ import com.example.teammate.ui.theme.PrimaryGreen
 sealed class Screen(val route: String, val title: String = "", val icon: ImageVector? = null) {
     object Onboarding : Screen("onboarding")
     object Login : Screen("login")
+    object Register : Screen("register")
     object Dashboard : Screen("dashboard", "Dashboard", Icons.Default.Home)
     object Projects : Screen("projects", "Projects", Icons.Default.Folder)
     object Calendar : Screen("calendar", "Calendar", Icons.Default.CalendarToday)
@@ -167,9 +169,27 @@ fun AppNavigation() {
                             navController.popBackStack()
                         },
                         onLoginSuccess = {
+                            navController.navigate(Screen.Register.route)
+                        },
+                        onCreateAccount = {
+                            navController.navigate(Screen.Register.route)
+                        },
+                        animatedVisibilityScope = this@composable,
+                        sharedTransitionScope = this@SharedTransitionLayout
+                    )
+                }
+                composable(Screen.Register.route) {
+                    RegisterScreen(
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onRegisterSuccess = {
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.Onboarding.route) { inclusive = true }
                             }
+                        },
+                        onNavigateToLogin = {
+                            navController.popBackStack()
                         },
                         animatedVisibilityScope = this@composable,
                         sharedTransitionScope = this@SharedTransitionLayout
