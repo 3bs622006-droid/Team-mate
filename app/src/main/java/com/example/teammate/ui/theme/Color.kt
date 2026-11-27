@@ -8,6 +8,7 @@ val DarkGreen = Color(0xFF127A44)
 val LightGreenBg = Color(0xFFE8F7EF)
 val SoftGreenAccent = Color(0xFF34C77B)
 
+
 // --- Backgrounds & Surfaces (الخلفيات والكروت) ---
 val BackgroundGray = Color(0xFFF6F7F9)
 val CardWhite = Color(0xFFFFFFFF)
