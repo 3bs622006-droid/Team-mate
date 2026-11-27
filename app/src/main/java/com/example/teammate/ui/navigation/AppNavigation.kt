@@ -169,7 +169,9 @@ fun AppNavigation() {
                             navController.popBackStack()
                         },
                         onLoginSuccess = {
-                            navController.navigate(Screen.Register.route)
+                            navController.navigate(Screen.Dashboard.route){
+                                popUpTo(Screen.Login.route){ inclusive = true }
+                            }
                         },
                         onCreateAccount = {
                             navController.navigate(Screen.Register.route)

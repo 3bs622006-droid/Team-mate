@@ -195,18 +195,18 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Forgot password? Link
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Text(
-                    text = "Forgot password?",
-                    color = PrimaryGreen,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { onForgotPassword() }
-                )
-            }
+//            Box(
+//                modifier = Modifier.fillMaxWidth(),
+//                contentAlignment = Alignment.CenterEnd
+//            ) {
+//                Text(
+//                    text = "Forgot password?",
+//                    color = PrimaryGreen,
+//                    fontSize = 13.sp,
+//                    fontWeight = FontWeight.Medium,
+//                    modifier = Modifier.clickable { onForgotPassword() }
+//                )
+//            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
