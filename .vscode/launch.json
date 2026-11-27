@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Android App (Emulator)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo 'Launching Android App via task...'",
+            "preLaunchTask": "Run Android App (Emulator)"
+        }
+    ]
+}
