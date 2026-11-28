@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "530130878435",
+    "project_id": "teammate-d85e0",
+    "storage_bucket": "teammate-d85e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530130878435:android:ae4751979849aeaefc2ad6",
+        "android_client_info": {
+          "package_name": "com.example.teammate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC5qNE3Was6zhAEv0Ibs6yevnz-3MxMRQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
