@@ -3,6 +3,7 @@ package com.example.teammate.ui.navigation
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -49,6 +50,7 @@ val HeroBoundsTransform = BoundsTransform { _, _ ->
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
     val bottomNavItems = listOf(
         Screen.Dashboard,
         Screen.Projects,
@@ -60,6 +62,14 @@ fun AppNavigation() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val shouldShowBottomBar = bottomNavItems.any { it.route == currentRoute }
+
+    val navigateToTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(Screen.Dashboard.route) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -79,13 +89,7 @@ fun AppNavigation() {
                                 selectedTextColor = PrimaryGreen,
                                 indicatorColor = PrimaryGreen.copy(alpha = 0.12f)
                             ),
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(Screen.Dashboard.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
+                            onClick = { navigateToTab(screen.route) }
                         )
                     }
                 }
@@ -96,7 +100,7 @@ fun AppNavigation() {
             NavHost(
                 navController = navController,
                 startDestination = Screen.Onboarding.route,
-                modifier = Modifier.padding(if (shouldShowBottomBar) innerPadding else androidx.compose.foundation.layout.PaddingValues()),
+                modifier = Modifier.padding(if (shouldShowBottomBar) innerPadding else PaddingValues()),
                 enterTransition = {
                     fadeIn(
                         animationSpec = tween(
@@ -169,8 +173,8 @@ fun AppNavigation() {
                             navController.popBackStack()
                         },
                         onLoginSuccess = {
-                            navController.navigate(Screen.Dashboard.route){
-                                popUpTo(Screen.Login.route){ inclusive = true }
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.Onboarding.route) { inclusive = true }
                             }
                         },
                         onCreateAccount = {
@@ -197,7 +201,13 @@ fun AppNavigation() {
                         sharedTransitionScope = this@SharedTransitionLayout
                     )
                 }
-                composable(Screen.Dashboard.route) { DashboardScreen() }
+                composable(Screen.Dashboard.route) {
+                    DashboardScreen(
+                        onSeeAllDeadlinesClick = {
+                            navigateToTab(Screen.Calendar.route)
+                        }
+                    )
+                }
                 composable(Screen.Projects.route) { ProjectsScreen() }
                 composable(Screen.Calendar.route) { CalendarScreen() }
                 composable(Screen.Team.route) { TeamScreen() }

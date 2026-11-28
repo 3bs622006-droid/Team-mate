@@ -97,24 +97,23 @@ object TeamMateState {
                 }
         }
     }
-
     private fun seedInitialData() {
-        val initialProjects = listOf(
-            mapOf(
+        val initialProjects = mapOf(
+            "p1" to mapOf(
                 "title" to "Marketing",
                 "code" to "MN406L",
                 "description" to "Campaign planning and social media strategy for final semester presentation.",
                 "deadline" to "25 April 2026",
                 "memberIds" to listOf("u1", "u2", "u4")
             ),
-            mapOf(
+            "p2" to mapOf(
                 "title" to "Statistics",
                 "code" to "ST210",
                 "description" to "Data analysis and probability distribution models using R and Python.",
                 "deadline" to "10 May 2026",
                 "memberIds" to listOf("u1", "u3", "u6")
             ),
-            mapOf(
+            "p3" to mapOf(
                 "title" to "Business",
                 "code" to "B6301",
                 "description" to "Feasibility study and financial projection report for startup pitch.",
@@ -123,8 +122,8 @@ object TeamMateState {
             )
         )
 
-        initialProjects.forEach { proj ->
-            db.collection("projects").add(proj)
+        initialProjects.forEach { (docId, projData) ->
+            db.collection("projects").document(docId).set(projData)
         }
 
         val initialTasks = listOf(
@@ -139,7 +138,6 @@ object TeamMateState {
             db.collection("tasks").add(task)
         }
     }
-
     fun toggleTaskCompletion(taskId: String) {
         val current = tasks.find { it.id == taskId } ?: return
         db.collection("tasks").document(taskId)
