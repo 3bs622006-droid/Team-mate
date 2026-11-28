@@ -24,11 +24,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -41,16 +44,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.teammate.state.TeamMateState
 import com.example.teammate.ui.theme.BorderLight
 import com.example.teammate.ui.theme.CardWhite
 import com.example.teammate.ui.theme.DarkGreen
 import com.example.teammate.ui.theme.LightGreenBg
+import com.example.teammate.ui.theme.PrimaryGreen
 import com.example.teammate.ui.theme.SoftGreenAccent
 import com.example.teammate.ui.theme.StatusErrorBg
 import com.example.teammate.ui.theme.StatusErrorText
@@ -110,14 +116,16 @@ data class CalendarAgendaItem(
     val title: String,
     val subtitle: String,
     val date: LocalDate,
-    val type: CalendarEventType
+    val type: CalendarEventType,
+    val taskId: String? = null,
+    val isCompleted: Boolean = false
 )
 
 data class CalendarUiState(
-    val visibleMonth: YearMonth = YearMonth.of(2026, Month.OCTOBER),
-    val selectedDate: LocalDate = LocalDate.of(2026, Month.OCTOBER, 25),
+    val visibleMonth: YearMonth = YearMonth.now(),
+    val selectedDate: LocalDate = LocalDate.now(),
     val activeFilter: CalendarEventType? = null,
-    val events: List<CalendarAgendaItem> = sampleTeamEvents()
+    val events: List<CalendarAgendaItem> = emptyList()
 )
 
 class CalendarViewModel : ViewModel() {
@@ -168,19 +176,92 @@ class CalendarViewModel : ViewModel() {
     }
 }
 
+private fun parseFlexibleDate(rawDate: String): LocalDate {
+    val clean = rawDate.trim()
+    val formatters = listOf(
+        DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH),
+        DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH),
+        DateTimeFormatter.ISO_LOCAL_DATE
+    )
+    for (formatter in formatters) {
+        try {
+            return LocalDate.parse(clean, formatter)
+        } catch (_: Exception) {
+        }
+    }
+    return LocalDate.now()
+}
+
 @Composable
 fun CalendarScreen(
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = viewModel()
 ) {
+    LaunchedEffect(Unit) {
+        TeamMateState.startFirestoreSync()
+    }
+
     val state by viewModel.uiState.collectAsState()
+    val projects = TeamMateState.projects
+    val tasks = TeamMateState.tasks
+
+    val syncedEvents = remember(projects.toList(), tasks.toList()) {
+        val taskEvents = tasks.map { task ->
+            val project = projects.find { it.id == task.projectId }
+            val projectLabel = project?.title ?: "Team Project"
+            CalendarAgendaItem(
+                id = "task_${task.id}",
+                title = task.title,
+                subtitle = "$projectLabel · ${task.assigneeName}",
+                date = parseFlexibleDate(task.dueDate),
+                type = CalendarEventType.TASK_DEADLINE,
+                taskId = task.id,
+                isCompleted = task.isCompleted
+            )
+        }
+
+        val milestoneEvents = projects.map { project ->
+            CalendarAgendaItem(
+                id = "project_${project.id}",
+                title = "${project.title} (${project.code}) Deadline",
+                subtitle = "Project Milestone · ${project.memberIds.size} members",
+                date = parseFlexibleDate(project.deadline),
+                type = CalendarEventType.MILESTONE
+            )
+        }
+
+        val today = LocalDate.now()
+        val staticTeamEvents = listOf(
+            CalendarAgendaItem(
+                id = "meet_1",
+                title = "Team Sprint Sync",
+                subtitle = "Meeting · Weekly progress review",
+                date = today,
+                type = CalendarEventType.MEETING
+            ),
+            CalendarAgendaItem(
+                id = "rem_1",
+                title = "Final Demo Rehearsal",
+                subtitle = "Reminder · Check all screens on develop",
+                date = today.plusDays(2),
+                type = CalendarEventType.REMINDER
+            )
+        )
+
+        taskEvents + milestoneEvents + staticTeamEvents
+    }
+
+    val mergedState = state.copy(events = syncedEvents)
 
     CalendarScreenContent(
-        state = state,
+        state = mergedState,
         onPreviousMonth = viewModel::previousMonth,
         onNextMonth = viewModel::nextMonth,
         onSelectDate = viewModel::selectDate,
         onToggleFilter = viewModel::toggleFilter,
+        onToggleTask = { taskId -> TeamMateState.toggleTaskCompletion(taskId) },
         modifier = modifier
     )
 }
@@ -192,6 +273,7 @@ fun CalendarScreenContent(
     onNextMonth: () -> Unit,
     onSelectDate: (LocalDate) -> Unit,
     onToggleFilter: (CalendarEventType) -> Unit,
+    onToggleTask: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val filteredEvents by remember(state.events, state.activeFilter) {
@@ -355,7 +437,12 @@ fun CalendarScreenContent(
             }
         } else {
             items(selectedDayEvents, key = { it.id }) { event ->
-                AgendaEventCard(event = event)
+                AgendaEventCard(
+                    event = event,
+                    onClick = {
+                        event.taskId?.let { onToggleTask(it) }
+                    }
+                )
             }
         }
     }
@@ -508,12 +595,18 @@ private fun DayCell(
 }
 
 @Composable
-private fun AgendaEventCard(event: CalendarAgendaItem) {
+private fun AgendaEventCard(
+    event: CalendarAgendaItem,
+    onClick: () -> Unit = {}
+) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = CardWhite,
         border = BorderStroke(1.dp, BorderLight),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(enabled = event.taskId != null, onClick = onClick)
     ) {
         Row(
             modifier = Modifier
@@ -540,7 +633,8 @@ private fun AgendaEventCard(event: CalendarAgendaItem) {
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
-                    color = TextPrimary,
+                    color = if (event.isCompleted) TextSecondary else TextPrimary,
+                    textDecoration = if (event.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -554,6 +648,16 @@ private fun AgendaEventCard(event: CalendarAgendaItem) {
                     overflow = TextOverflow.Ellipsis
                 )
             }
+
+            if (event.taskId != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (event.isCompleted) Icons.Rounded.CheckCircle else Icons.Rounded.RadioButtonUnchecked,
+                    contentDescription = "Toggle task",
+                    tint = if (event.isCompleted) PrimaryGreen else TextSecondary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
     }
 }
@@ -565,48 +669,13 @@ fun sampleTeamEvents(): List<CalendarAgendaItem> = listOf(
         subtitle = "Task · TeamMate deck",
         date = LocalDate.of(2026, Month.OCTOBER, 25),
         type = CalendarEventType.TASK_DEADLINE
-    ),
-    CalendarAgendaItem(
-        id = "2",
-        title = "Team sync call",
-        subtitle = "Meeting · Sprint check-in",
-        date = LocalDate.of(2026, Month.OCTOBER, 25),
-        type = CalendarEventType.MEETING
-    ),
-    CalendarAgendaItem(
-        id = "3",
-        title = "Submit navigation PR",
-        subtitle = "Task · AppNavigation review",
-        date = LocalDate.of(2026, Month.OCTOBER, 14),
-        type = CalendarEventType.TASK_DEADLINE
-    ),
-    CalendarAgendaItem(
-        id = "4",
-        title = "Design token audit",
-        subtitle = "Milestone · UI polish",
-        date = LocalDate.of(2026, Month.OCTOBER, 22),
-        type = CalendarEventType.MILESTONE
-    ),
-    CalendarAgendaItem(
-        id = "5",
-        title = "Release candidate freeze",
-        subtitle = "Reminder · Merge to develop",
-        date = LocalDate.of(2026, Month.OCTOBER, 23),
-        type = CalendarEventType.REMINDER
-    ),
-    CalendarAgendaItem(
-        id = "6",
-        title = "QA regression pass",
-        subtitle = "Task · Pixel 9 emulator check",
-        date = LocalDate.of(2026, Month.OCTOBER, 27),
-        type = CalendarEventType.TASK_DEADLINE
     )
 )
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 820)
 @Composable
 private fun CalendarScreenPreview() {
-    var previewState by remember { mutableStateOf(CalendarUiState()) }
+    var previewState by remember { mutableStateOf(CalendarUiState(events = sampleTeamEvents())) }
 
     CalendarScreenContent(
         state = previewState,
@@ -634,4 +703,3 @@ private fun CalendarScreenPreview() {
         }
     )
 }
-

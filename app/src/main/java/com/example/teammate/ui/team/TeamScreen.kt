@@ -31,8 +31,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,13 +43,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-// colors
-import com.example.teammate.ui.theme.BackgroundGray
+import com.example.teammate.model.TeamMember
+import com.example.teammate.state.TeamMateState
 import com.example.teammate.ui.theme.CardWhite
 import com.example.teammate.ui.theme.DarkGreen
-import com.example.teammate.ui.theme.LightGreenBg
-import com.example.teammate.ui.theme.SurfaceVariantLight
-
 import com.example.teammate.ui.theme.PrimaryGreen
 import com.example.teammate.ui.theme.SoftGreenAccent
 import com.example.teammate.ui.theme.StatusErrorText
@@ -58,13 +55,13 @@ import com.example.teammate.ui.theme.StatusSuccessBg
 import com.example.teammate.ui.theme.StatusSuccessText
 import com.example.teammate.ui.theme.StatusWarningBg
 import com.example.teammate.ui.theme.StatusWarningText
-import com.example.teammate.ui.theme.TextHint
+import com.example.teammate.ui.theme.SurfaceVariantLight
 import com.example.teammate.ui.theme.TextOnPrimary
 import com.example.teammate.ui.theme.TextPrimary
 import com.example.teammate.ui.theme.TextSecondary
 
 data class TeamMemberUi(
-    val id: Int,
+    val id: String,
     val name: String,
     val role: String,
     val completedTasks: Int = 0,
@@ -89,12 +86,12 @@ private val MemberPalette = listOf(
     ),
     MemberColorTheme(
         accent = DarkGreen,
-        softBg = DarkGreen ,
+        softBg = DarkGreen,
         badgeText = TextOnPrimary
     ),
     MemberColorTheme(
         accent = StatusWarningText,
-        softBg = StatusWarningText ,
+        softBg = StatusWarningText,
         badgeText = TextOnPrimary
     ),
     MemberColorTheme(
@@ -121,7 +118,27 @@ private fun memberColorAt(index: Int): MemberColorTheme =
 fun TeamScreen(
     modifier: Modifier = Modifier
 ) {
-    val members = remember { mutableStateListOf<TeamMemberUi>() }
+    LaunchedEffect(Unit) {
+        TeamMateState.startFirestoreSync()
+    }
+
+    val allTasks = TeamMateState.tasks
+    val members = TeamMateState.teamMembers.map { member ->
+        val memberTasks = allTasks.filter {
+            it.assigneeName.equals(member.name, ignoreCase = true)
+        }
+        val completed = memberTasks.count { it.isCompleted }
+        val remaining = memberTasks.count { !it.isCompleted }
+
+        TeamMemberUi(
+            id = member.id,
+            name = member.name,
+            role = member.role,
+            completedTasks = completed,
+            remainingTasks = remaining
+        )
+    }
+
     var showAddDialog by remember { mutableStateOf(false) }
     var nameInput by remember { mutableStateOf("") }
     var roleInput by remember { mutableStateOf("") }
@@ -227,13 +244,21 @@ fun TeamScreen(
                         val cleanName = nameInput.trim()
                         val cleanRole = roleInput.trim()
                         if (cleanName.isNotEmpty() && cleanRole.isNotEmpty()) {
-                            members.add(
-                                TeamMemberUi(
-                                    id = (members.maxOfOrNull { it.id } ?: 0) + 1,
+                            val initials = cleanName
+                                .split(" ")
+                                .filter { it.isNotBlank() }
+                                .take(2)
+                                .joinToString("") { it.first().uppercase() }
+                            val newId = "u${TeamMateState.teamMembers.size + 1}"
+                            val emailSlug = cleanName.lowercase().replace(" ", "")
+
+                            TeamMateState.teamMembers.add(
+                                TeamMember(
+                                    id = newId,
                                     name = cleanName,
                                     role = cleanRole,
-                                    completedTasks = 0,
-                                    remainingTasks = 0
+                                    initials = initials,
+                                    email = "$emailSlug@university.edu.eg"
                                 )
                             )
                             nameInput = ""
