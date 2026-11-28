@@ -1,7 +1,9 @@
 package com.example.teammate.ui.team
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -140,6 +142,7 @@ fun TeamScreen(
     }
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var memberToDelete by remember { mutableStateOf<TeamMemberUi?>(null) }
     var nameInput by remember { mutableStateOf("") }
     var roleInput by remember { mutableStateOf("") }
     val fairSharePercent = if (members.isEmpty()) 0 else (100f / members.size).toInt()
@@ -200,7 +203,8 @@ fun TeamScreen(
                     TeamMemberCard(
                         member = member,
                         fairSharePercent = fairSharePercent,
-                        colorTheme = memberColorAt(index)
+                        colorTheme = memberColorAt(index),
+                        onLongClick = { memberToDelete = member }
                     )
                 }
             }
@@ -249,7 +253,7 @@ fun TeamScreen(
                                 .filter { it.isNotBlank() }
                                 .take(2)
                                 .joinToString("") { it.first().uppercase() }
-                            val newId = "u${TeamMateState.teamMembers.size + 1}"
+                            val newId = "u${System.currentTimeMillis()}"
                             val emailSlug = cleanName.lowercase().replace(" ", "")
 
                             TeamMateState.teamMembers.add(
@@ -278,6 +282,41 @@ fun TeamScreen(
                         roleInput = ""
                     }
                 ) {
+                    Text("Cancel", color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    memberToDelete?.let { target ->
+        AlertDialog(
+            containerColor = CardWhite,
+            onDismissRequest = { memberToDelete = null },
+            title = {
+                Text(
+                    text = "Remove Member",
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to remove ${target.name} from the team?",
+                    color = TextSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        TeamMateState.teamMembers.removeAll { it.id == target.id }
+                        memberToDelete = null
+                    }
+                ) {
+                    Text("Remove", color = StatusErrorText, fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { memberToDelete = null }) {
                     Text("Cancel", color = TextSecondary)
                 }
             }
@@ -347,11 +386,13 @@ private fun ContributionSplitCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TeamMemberCard(
     member: TeamMemberUi,
     fairSharePercent: Int,
     colorTheme: MemberColorTheme,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val initials = member.name
@@ -366,7 +407,13 @@ private fun TeamMemberCard(
     val statusTextColor = if (isOnTrack) StatusSuccessText else StatusWarningText
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .combinedClickable(
+                onClick = {},
+                onLongClick = onLongClick
+            ),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite)
     ) {
